@@ -1,0 +1,54 @@
+type RecipientCriteria {
+    upns: [String]
+}
+
+type Body {
+    subject: String
+    text: String
+}
+
+type Resource {
+    link: String
+    type: String
+}
+
+type Item {
+    recepientCriteria: RecipientCriteria
+    body: Body
+    resource: Resource
+    categoryCode: String
+}
+
+input RecepientCriteriaInput {
+    upns: [String]
+}
+
+input BodyInput {
+    subject: String
+    text: String
+}
+
+input ResourceInput {
+    link: String
+    type: String
+}
+
+input InputItem {
+    recepientCriteria: RecepientCriteriaInput
+    body: BodyInput,
+    resource: ResourceInput,
+    categoryCode: String
+}
+
+type Query {
+    getItemById(id: String): Item
+}
+
+type Mutation {
+    addItem(input: InputItem): Item
+}
+
+schema {
+    query: Query
+    mutation: Mutation
+}

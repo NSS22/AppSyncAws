@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+
+  ApiName:
+    Description: Name of the API
+    Type: String
+    Default: nss
+
+Resources:
+  DynamoDBTableItems:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "itemId"
+          AttributeType: "S"
+        - AttributeName: "recipientCriteria"
+            AttributeType: "M"
+        - AttributeName: "body"
+            AttributeType: "M"
+        - AttributeName: "resource"
+            AttributeType: "M"
+        - AttributeName: "categoryCode"
+            AttributeType: "S"
+      KeySchema:
+        - AttributeName: "itemId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: !Join ["", [!Ref ApiName, "-items"]]
+
+Outputs:
+
+  DynamoDBTableItemsName:
+    Description: DynamoDB Items table name
+    Value: !Ref DynamoDBTableItems
+
+  DynamoDBTableItemsArn:
+    Description: DynamoDB Items table ARN
+    Value: !GetAtt DynamoDBTableItems.Arn

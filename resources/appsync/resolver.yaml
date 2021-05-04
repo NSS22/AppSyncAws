@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+
+  ApiName:
+    Type: String
+    Description: Name of the API
+    Default: nss
+
+Resources:
+
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Join ["", [!Ref ApiName, "-graphql-api"]]
+      AuthenticationType: API_KEY
+
+  ApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: ./schema/api.graphql
+
+  ApiRole:
+    Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - appsync.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Policies:
+          - PolicyName: !Join [ "", [ !Ref ApiName, "-dynamodb-access" ] ]
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                  Resource: !Ref DynamoDBTableItemsArn
+
+Outputs:
+
+  GraphQLApiId:
+    Description: GraphQL API ID
+    Value: !GetAtt GraphQLApi.ApiId
+
+  GraphQLApiEndpoint:
+    Description: GraphQL API URL
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+
+  ApiKey:
+    Description: API Key
+    Value: !GetAtt ApiKey.ApiKey
+
+  ApiRoleArn:
+    Description: API role ARN
+    Value: !GetAtt ApiRole.Arn

@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+
+  ApiName:
+    Description: Name of the API
+    Type: String
+    Default: nss
+
+Resources:
+
+  ItemsTableDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !Ref GraphQLApiId
+      Name: ItemsTableDataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !Ref ApiRoleArn
+      DynamoDBConfig:
+        AwsRegion: !Ref AWS::Region
+        TableName: !Ref DynamoDBTableItemsArn
+
+  QueryGetItemsResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !Ref GraphQLApiId
+      TypeName: Query
+      FieldName: getItemById
+      DataSourceName: !GetAtt ItemsTableDataSource.Name
+      RequestMappingTemplate: |
+        {
+            "version": "2017-02-28",
+            "operation": "GetItem",
+            "key": {
+                "itemId": $util.dynamodb.toDynamoDBJson($ctx.args.id)
+            }
+        }
+      ResponseMappingTemplate: "$utils.toJson($ctx.result)"
+
+  MutationAddItemResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      TypeName: Mutation
+      FieldName: addItem
+      DataSourceName: !GetAtt ItemsTableDataSource.Name
+      RequestMappingTemplate: |
+        #set( $d = $util.dynamodb )
+        {
+            "version": "2017-02-28",
+            "operation": "PutItem",
+            "key": {
+                "itemId": $d.toDynamoDBJson($utils.autoId())
+            },
+            "attributeValues": $d.toJson($ctx.args.input)
+        }
+      ResponseMappingTemplate: "$util.toJson($ctx.result)"
+      ApiId: !Ref GraphQLApiId
