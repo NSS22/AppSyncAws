@@ -23,36 +23,92 @@ Resources:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt GraphQLApi.ApiId
-      Definition: ./schema/api.graphql
+      Definition: |
+        type RecipientCriteria {
+            upns: [String]
+        }
+
+        type Body {
+            subject: String
+            text: String
+        }
+
+        type Resource {
+            link: String
+            type: String
+        }
+
+        type Item {
+            recepientCriteria: RecipientCriteria
+            body: Body
+            resource: Resource
+            categoryCode: String
+        }
+
+        input RecepientCriteriaInput {
+            upns: [String]
+        }
+
+        input BodyInput {
+            subject: String
+            text: String
+        }
+
+        input ResourceInput {
+            link: String
+            type: String
+        }
+
+        input InputItem {
+            body: BodyInput,
+            resource: ResourceInput,
+            categoryCode: String
+        }
+
+        type Query {
+            getItemById(id: String): Item
+        }
+
+        type Mutation {
+            addItem(input: InputItem): Item
+        }
+
+        schema {
+            query: Query
+            mutation: Mutation
+        }
 
   ApiRole:
     Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - appsync.amazonaws.com
-              Action:
-                - sts:AssumeRole
-        Policies:
-          - PolicyName: !Join [ "", [ !Ref ApiName, "-dynamodb-access" ] ]
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - dynamodb:GetItem
-                    - dynamodb:PutItem
-                  Resource: !Ref DynamoDBTableItemsArn
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - appsync.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Join [ "", [ !Ref ApiName, "-dynamodb-access" ] ]
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource: !ImportValue
+                  "Fn::Sub": "${ApiName}-items-arn"
 
 Outputs:
 
   GraphQLApiId:
     Description: GraphQL API ID
     Value: !GetAtt GraphQLApi.ApiId
+    Export:
+      Name: !Join [ "", [!Ref ApiName, "-graphQL-api-id"]]
 
   GraphQLApiEndpoint:
     Description: GraphQL API URL
@@ -65,3 +121,5 @@ Outputs:
   ApiRoleArn:
     Description: API role ARN
     Value: !GetAtt ApiRole.Arn
+    Export:
+      Name: !Join [ "", [!Ref ApiName, "-graphQL-api-role-arn"]]

@@ -13,14 +13,6 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "itemId"
           AttributeType: "S"
-        - AttributeName: "recipientCriteria"
-            AttributeType: "M"
-        - AttributeName: "body"
-            AttributeType: "M"
-        - AttributeName: "resource"
-            AttributeType: "M"
-        - AttributeName: "categoryCode"
-            AttributeType: "S"
       KeySchema:
         - AttributeName: "itemId"
           KeyType: "HASH"
@@ -34,7 +26,11 @@ Outputs:
   DynamoDBTableItemsName:
     Description: DynamoDB Items table name
     Value: !Ref DynamoDBTableItems
+    Export:
+      Name: !Join [ "", [!Ref ApiName, "-items"]]
 
   DynamoDBTableItemsArn:
     Description: DynamoDB Items table ARN
     Value: !GetAtt DynamoDBTableItems.Arn
+    Export:
+      Name: !Join [ "", [!Ref ApiName, "-items-arn"]]

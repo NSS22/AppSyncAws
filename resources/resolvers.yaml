@@ -11,18 +11,22 @@ Resources:
   ItemsTableDataSource:
     Type: AWS::AppSync::DataSource
     Properties:
-      ApiId: !Ref GraphQLApiId
+      ApiId: !ImportValue
+        "Fn::Sub": "${ApiName}-graphQL-api-id"
       Name: ItemsTableDataSource
       Type: AMAZON_DYNAMODB
-      ServiceRoleArn: !Ref ApiRoleArn
+      ServiceRoleArn: !ImportValue
+        "Fn::Sub": "${ApiName}-graphQL-api-role-arn"
       DynamoDBConfig:
         AwsRegion: !Ref AWS::Region
-        TableName: !Ref DynamoDBTableItemsArn
+        TableName: !ImportValue
+          "Fn::Sub": "${ApiName}-items"
 
   QueryGetItemsResolver:
     Type: AWS::AppSync::Resolver
     Properties:
-      ApiId: !Ref GraphQLApiId
+      ApiId: !ImportValue
+        "Fn::Sub": "${ApiName}-graphQL-api-id"
       TypeName: Query
       FieldName: getItemById
       DataSourceName: !GetAtt ItemsTableDataSource.Name
@@ -50,7 +54,8 @@ Resources:
             "key": {
                 "itemId": $d.toDynamoDBJson($utils.autoId())
             },
-            "attributeValues": $d.toJson($ctx.args.input)
+            "attributeValues": $d.toMapValuesJson($ctx.args.input)
         }
       ResponseMappingTemplate: "$util.toJson($ctx.result)"
-      ApiId: !Ref GraphQLApiId
+      ApiId: !ImportValue
+        "Fn::Sub": "${ApiName}-graphQL-api-id"
